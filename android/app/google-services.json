@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "578250002980",
+    "project_id": "marketsnapp-7e461",
+    "storage_bucket": "marketsnapp-7e461.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:578250002980:android:0653aa9f5dafc27614feb1",
+        "android_client_info": {
+          "package_name": "com.example.marketsnapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCROQj96KtK1TD6jnP4r-62OqWJThHUsfE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
