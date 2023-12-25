@@ -106,7 +106,7 @@ class _LandingScreen extends State<LandingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: appbar[_selectedIndex],
-      backgroundColor: Colors.black,
+      backgroundColor: const Color.fromRGBO(14, 15, 24, 1.0),
       body: Center(
         child: _widgetOptions.elementAt(_selectedIndex),
       ),
