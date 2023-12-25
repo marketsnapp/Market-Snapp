@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> signup(var email, var password) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  String url = 'http://192.168.0.102:5000/auth/sign-up';
+  String url = 'http://192.168.1.33:5000/auth/sign-up';
   String? registerationToken = await FirebaseMessaging.instance.getToken();
   final response = await http.post(
     Uri.parse(url),
@@ -25,7 +25,7 @@ Future<void> signup(var email, var password) async {
 
 Future<void> login(var email, var password) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  String url = 'http://192.168.0.102:5000/auth/login';
+  String url = 'http://192.168.1.33:5000/auth/login';
   String? registerationToken = await FirebaseMessaging.instance.getToken();
   final response = await http.post(
     Uri.parse(url),
@@ -47,7 +47,7 @@ Future<void> getUser() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String? token = prefs.getString("token");
   print(token);
-  String url = 'http://192.168.0.102:5000/auth/user';
+  String url = 'http://192.168.1.33:5000/auth/user';
   final response = await http.get(
     Uri.parse(url),
     headers: {"token": token ?? token.toString()},
