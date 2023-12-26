@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:marketsnapp/screens/splash_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:marketsnapp/screens/signup_screen.dart';
 import 'package:marketsnapp/screens/landing_screen.dart';
 
-class loadingScreen extends StatelessWidget {
-  const loadingScreen({super.key});
+class LoadingScreen extends StatelessWidget {
+  const LoadingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     checkToken() async {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString("token");
-      print(token);
       if (token != null) {
         Navigator.pushReplacementNamed(context, LandingScreen.id);
       } else {
-        Navigator.pushReplacementNamed(context, SignUpSection.id);
+        Navigator.pushReplacementNamed(context, SplashScreen.id);
       }
     }
 

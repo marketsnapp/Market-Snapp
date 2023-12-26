@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:marketsnapp/config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:marketsnapp/api/auth.dart';
 import 'package:marketsnapp/screens/profile_screen.dart';
 import 'package:marketsnapp/screens/home_screen.dart';
-import 'add_transaction_search_screen.dart';
-import 'settings_screen.dart';
+import 'package:marketsnapp/screens/add_transaction_search_screen.dart';
+import 'package:marketsnapp/screens/settings_screen.dart';
 
 class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
-  static const String id = 'LandingPage';
+  static const String id = 'landing';
   @override
   State<LandingScreen> createState() => _LandingScreen();
 }
@@ -16,75 +17,26 @@ class LandingScreen extends StatefulWidget {
 class _LandingScreen extends State<LandingScreen> {
   int _selectedIndex = 0;
 
-  List<AppBar> appbar = [
-    //Home Appbar
-    AppBar(
-      title: const Text(
-        '1',
-        style: TextStyle(
-          color: Colors.white,
-        ),
-      ),
-      backgroundColor: const Color.fromRGBO(14, 15, 24, 1.0),
-    ),
-    // Description App Bar
-    AppBar(
-      title: Text(
-        '2',
-        style: TextStyle(
-          color: Colors.white,
-        ),
-      ),
-      backgroundColor: const Color.fromRGBO(14, 15, 24, 1.0),
-    ),
-    // Add Appbar
-    AppBar(
-      centerTitle: true,
-      title: const Text(
-        'Add Transaction',
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      backgroundColor: const Color.fromRGBO(14, 15, 24, 1.0),
-    ),
-    // Notifications Bar
-    AppBar(
-      centerTitle: true,
-      title: const Text(
-        'Notifications',
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      backgroundColor: const Color.fromRGBO(14, 15, 24, 1.0),
-    ),
-    //Settings Appbar
-    AppBar(
-      centerTitle: true,
-      actions: [
-        IconButton(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.delete,
-              color: Colors.white,
-            ))
-      ],
-      title: const Text(
-        'Settings',
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      backgroundColor: const Color.fromRGBO(14, 15, 24, 1.0),
-    ),
-  ];
+  AppBar _buildAppBar(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        return AppBar(
+          title: Text(
+            'Market Snapp',
+            style: Header1(),
+          ),
+          scrolledUnderElevation: 0,
+          backgroundColor: backgroundColor,
+        );
+      case 1:
+        return AppBar();
+      default:
+        return AppBar();
+    }
+  }
 
   static final List<Widget> _widgetOptions = <Widget>[
-    homeScreen(),
+    HomeScreen(),
     profileScreen(),
     addTransactionSearchScreen(),
     Icon(Icons.home),
@@ -105,8 +57,8 @@ class _LandingScreen extends State<LandingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appbar[_selectedIndex],
-      backgroundColor: const Color.fromRGBO(14, 15, 24, 1.0),
+      appBar: _buildAppBar(context, _selectedIndex),
+      backgroundColor: backgroundColor,
       body: Center(
         child: _widgetOptions.elementAt(_selectedIndex),
       ),
@@ -115,27 +67,29 @@ class _LandingScreen extends State<LandingScreen> {
         onTap: _onItemTapped,
         items: const [
           BottomNavigationBarItem(
-            backgroundColor: Color.fromRGBO(14, 15, 24, 1.0),
+            backgroundColor: backgroundColor,
             label: 'Home',
             icon: Icon(Icons.home),
           ),
           BottomNavigationBarItem(
-            backgroundColor: Color.fromRGBO(14, 15, 24, 1.0),
+            backgroundColor: backgroundColor,
             label: 'Menu',
             icon: Icon(Icons.description),
           ),
           BottomNavigationBarItem(
-            backgroundColor: Color.fromRGBO(14, 15, 24, 1.0),
+            backgroundColor: backgroundColor,
             label: 'Add',
-            icon: Icon(Icons.add_circle),
+            icon: Icon(
+              Icons.add_circle,
+            ),
           ),
           BottomNavigationBarItem(
-            backgroundColor: Color.fromRGBO(14, 15, 24, 1.0),
+            backgroundColor: backgroundColor,
             label: 'Notifications',
             icon: Icon(Icons.notifications),
           ),
           BottomNavigationBarItem(
-            backgroundColor: Color.fromRGBO(14, 15, 24, 1.0),
+            backgroundColor: backgroundColor,
             label: 'Settings',
             icon: Icon(Icons.settings),
           ),

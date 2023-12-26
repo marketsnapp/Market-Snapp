@@ -19,13 +19,13 @@ class _addTransactionPageState extends State<addTransactionPage> {
       initialIndex: 0,
       length: 2,
       child: Scaffold(
-        backgroundColor: const Color.fromRGBO(14, 15, 24, 1.0),
+        backgroundColor: const Color(0xff0e0f18),
         appBar: AppBar(
           iconTheme: IconThemeData(
             color: Colors.white70, // <-- SEE HERE
           ),
           centerTitle: true,
-          backgroundColor: const Color.fromRGBO(14, 15, 24, 1.0),
+          backgroundColor: const Color(0xff0e0f18),
           title: Text(
             '${widget.cryptoData.name}',
             style: TextStyle(color: Colors.white),
@@ -54,7 +54,7 @@ class _addTransactionPageState extends State<addTransactionPage> {
                   onTap: () {
                     print('Price is clicked');
                   },
-                  tileColor: const Color.fromRGBO(14, 15, 24, 1.0),
+                  tileColor: const Color(0xff0e0f18),
                   subtitle: const Text(
                     'Enter the price when you bought',
                     style: TextStyle(
@@ -80,7 +80,7 @@ class _addTransactionPageState extends State<addTransactionPage> {
                   onTap: () {
                     print('Amount bought is clicked');
                   },
-                  tileColor: const Color.fromRGBO(14, 15, 24, 1.0),
+                  tileColor: const Color(0xff0e0f18),
                   subtitle: const Text(
                     'Enter the amount you bought',
                     style: TextStyle(
@@ -106,7 +106,7 @@ class _addTransactionPageState extends State<addTransactionPage> {
                   onTap: () {
                     print('Amount bought is clicked');
                   },
-                  tileColor: const Color.fromRGBO(14, 15, 24, 1.0),
+                  tileColor: const Color(0xff0e0f18),
                   title: const Text(
                     'Deduct from ETH holdings?',
                     style: TextStyle(
@@ -116,7 +116,7 @@ class _addTransactionPageState extends State<addTransactionPage> {
                     ),
                   ),
                   trailing: Switch(
-                    inactiveTrackColor: const Color.fromRGBO(14, 15, 24, 1.0),
+                    inactiveTrackColor: const Color(0xff0e0f18),
                     activeColor: const Color.fromRGBO(50, 204, 134, 1.0),
                     value: deduct,
                     onChanged: (value) {

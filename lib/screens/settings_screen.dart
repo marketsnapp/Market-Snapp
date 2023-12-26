@@ -9,11 +9,11 @@ class SettingsBody extends StatelessWidget {
       children: [
         SizedBox(
           child: Card(
-            color: const Color.fromRGBO(14, 15, 24, 1.0),
+            color: const Color(0xff0e0f18),
             child: Column(
               children: [
                 const ListTile(
-                  tileColor: const Color.fromRGBO(14, 15, 24, 1.0),
+                  tileColor: const Color(0xff0e0f18),
                   title: Text(
                     'Accounts',
                     style: TextStyle(
@@ -27,7 +27,7 @@ class SettingsBody extends StatelessWidget {
                   onTap: () {
                     print('User Profile is clicked');
                   },
-                  tileColor: const Color.fromRGBO(14, 15, 24, 1.0),
+                  tileColor: const Color(0xff0e0f18),
                   title: const Text(
                     'User Profile',
                     style: TextStyle(
@@ -44,7 +44,7 @@ class SettingsBody extends StatelessWidget {
                   onTap: () {
                     print('Log Out is clicked');
                   },
-                  tileColor: const Color.fromRGBO(14, 15, 24, 1.0),
+                  tileColor: const Color(0xff0e0f18),
                   title: const Text(
                     'Log Out',
                     style: TextStyle(
@@ -56,7 +56,7 @@ class SettingsBody extends StatelessWidget {
                   ),
                 ),
                 const ListTile(
-                  tileColor: const Color.fromRGBO(14, 15, 24, 1.0),
+                  tileColor: const Color(0xff0e0f18),
                   title: Text(
                     'Socials',
                     style: TextStyle(
@@ -70,7 +70,7 @@ class SettingsBody extends StatelessWidget {
                   onTap: () {
                     print('Twitter is clicked');
                   },
-                  tileColor: const Color.fromRGBO(14, 15, 24, 1.0),
+                  tileColor: const Color(0xff0e0f18),
                   title: const Text(
                     'Twitter',
                     style: TextStyle(
@@ -85,7 +85,7 @@ class SettingsBody extends StatelessWidget {
                   onTap: () {
                     print('Telegram is clicked');
                   },
-                  tileColor: const Color.fromRGBO(14, 15, 24, 1.0),
+                  tileColor: const Color(0xff0e0f18),
                   title: const Text(
                     'Telegram',
                     style: TextStyle(
@@ -100,7 +100,7 @@ class SettingsBody extends StatelessWidget {
                   onTap: () {
                     print('Medium is clicked');
                   },
-                  tileColor: const Color.fromRGBO(14, 15, 24, 1.0),
+                  tileColor: const Color(0xff0e0f18),
                   title: const Text(
                     'Medium',
                     style: TextStyle(
@@ -115,7 +115,7 @@ class SettingsBody extends StatelessWidget {
                   onTap: () {
                     print('Share This App is clicked');
                   },
-                  tileColor: const Color.fromRGBO(14, 15, 24, 1.0),
+                  tileColor: const Color(0xff0e0f18),
                   title: const Text(
                     'Share This App',
                     style: TextStyle(
