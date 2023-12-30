@@ -27,7 +27,7 @@ class _SignUpSectionState extends State<SignUpSection> {
         errorMessage = result;
       });
     } else {
-      Navigator.of(context).pushReplacementNamed(LandingScreen.id);
+      Navigator.pushReplacementNamed(context, LandingScreen.id);
     }
   }
 
@@ -64,7 +64,7 @@ class _SignUpSectionState extends State<SignUpSection> {
                   ),
                   fillColor: Colors.transparent,
                 ),
-                style: const TextStyle(color: Colors.white),
+                style: Body(),
                 cursorColor: primaryColor,
                 cursorHeight: 20,
                 keyboardType: TextInputType.emailAddress,
@@ -93,7 +93,7 @@ class _SignUpSectionState extends State<SignUpSection> {
                   ),
                   fillColor: Colors.transparent,
                 ),
-                style: const TextStyle(color: Colors.white),
+                style: Body(),
                 cursorColor: primaryColor,
                 cursorHeight: 20,
                 obscureText: true,

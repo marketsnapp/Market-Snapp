@@ -27,7 +27,7 @@ class _LoginSectionState extends State<LoginSection> {
         errorMessage = result;
       });
     } else {
-      Navigator.of(context).pushReplacementNamed(LandingScreen.id);
+      Navigator.pushReplacementNamed(context, LandingScreen.id);
     }
   }
 
@@ -64,7 +64,7 @@ class _LoginSectionState extends State<LoginSection> {
                   ),
                   fillColor: Colors.transparent,
                 ),
-                style: const TextStyle(color: Colors.white),
+                style: Body(),
                 cursorColor: primaryColor,
                 cursorHeight: 20,
                 keyboardType: TextInputType.emailAddress,
@@ -93,7 +93,7 @@ class _LoginSectionState extends State<LoginSection> {
                   ),
                   fillColor: Colors.transparent,
                 ),
-                style: const TextStyle(color: Colors.white),
+                style: Body(),
                 cursorColor: primaryColor,
                 cursorHeight: 20,
                 obscureText: true,
@@ -119,7 +119,7 @@ class _LoginSectionState extends State<LoginSection> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    visualDensity: VisualDensity(),
+                    visualDensity: const VisualDensity(),
                     backgroundColor: primaryColor,
                     disabledBackgroundColor:
                         const Color.fromARGB(64, 0, 85, 255),

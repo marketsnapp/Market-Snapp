@@ -15,12 +15,12 @@ class SplashScreen extends StatelessWidget {
       body: Align(
         alignment: Alignment.center,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center, // Bu satırı ekleyin
-          crossAxisAlignment: CrossAxisAlignment.center, // Bu satırı ekleyin
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const CircleAvatar(
               radius: 64,
-              backgroundColor: primaryColor,
+              backgroundColor: imagePaddingBackgroundColor,
             ),
             const SizedBox(height: 16),
             Padding(
@@ -28,7 +28,7 @@ class SplashScreen extends StatelessWidget {
               child: Text(
                 "Welcome to MarketSnapp",
                 style: Header1(),
-                textAlign: TextAlign.center, // Bu satırı ekleyin
+                textAlign: TextAlign.center,
               ),
             ),
             const SizedBox(height: 24),
@@ -37,28 +37,29 @@ class SplashScreen extends StatelessWidget {
               child: Text(
                 "All your crypto transactions in one place! Track coins, add portfolios, buy & sell.",
                 style: Body(),
-                textAlign: TextAlign.center, // Bu satırı ekleyin
+                textAlign: TextAlign.center,
               ),
             ),
             const SizedBox(height: 36),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    elevation: 1,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    fixedSize: const Size(187, 50),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  elevation: 1,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
                   ),
-                  onPressed: () {
-                    Navigator.of(context).pushNamed(LoginSection.id);
-                  },
-                  child: Text(
-                    "Login",
-                    style: Body(),
-                  )),
+                  fixedSize: const Size(187, 50),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pushNamed(LoginSection.id);
+                },
+                child: Text(
+                  "Login",
+                  style: Body(),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             Padding(

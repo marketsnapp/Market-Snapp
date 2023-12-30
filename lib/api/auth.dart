@@ -85,7 +85,6 @@ Future<void> getUser() async {
     Uri.parse(url),
     headers: {"token": token ?? token.toString()},
   );
-  print(response.body);
   final result = jsonDecode(response.body) as Map<String, dynamic>;
   await prefs.setString('email', result['email']);
 }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'add_transaction_search_screen.dart';
+import 'package:marketsnapp/types/cryptocurrency.dart';
 
 class addTransactionPage extends StatefulWidget {
-  final Crypto cryptoData;
+  final CryptoRecord cryptoData;
   const addTransactionPage({Key? key, required this.cryptoData})
       : super(key: key);
 

@@ -32,7 +32,7 @@ class _profileScreenState extends State<profileScreen> {
             Padding(
               padding: EdgeInsets.only(bottom: 30),
               child: Text(
-                profileScreen.email!,
+                "profileScreen.email",
                 style: TextStyle(fontSize: 20),
               ),
             ),
