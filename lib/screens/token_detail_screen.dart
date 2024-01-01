@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:marketsnapp/api/cryptocurrency.dart';
-import 'package:marketsnapp/utils/windowSizeFormatter.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:marketsnapp/providers/cryptocurrency_provider.dart';
+import 'package:marketsnapp/screens/add_transaction_screen.dart';
+import 'package:marketsnapp/utils/getPriceChangeData.dart';
+import 'package:provider/provider.dart';
 import 'package:marketsnapp/config.dart';
 import 'package:marketsnapp/types/cryptocurrency.dart';
 import 'package:marketsnapp/utils/moneyFormatter.dart';
 import 'package:marketsnapp/widgets/cryptocurrency_price_text_screen.dart';
 
 class TokenDetailScreen extends StatefulWidget {
-  final CryptoRecord cryptoData;
-  const TokenDetailScreen({Key? key, required this.cryptoData})
+  final CryptocurrencyRecord cryptocurrency;
+  const TokenDetailScreen({Key? key, required this.cryptocurrency})
       : super(key: key);
 
   @override
@@ -17,12 +18,9 @@ class TokenDetailScreen extends StatefulWidget {
 }
 
 class _TokenDetailScreenState extends State<TokenDetailScreen> {
-  late IO.Socket socket;
-  bool isLoading = false;
-  late CryptoRecord cryptocurrency;
-
-  int _selectedRangeIndex = 1;
-  String _selectedChartType = 'linechart';
+  String windowSize = '24 Hours';
+  PriceChangeData? priceChangeData;
+  Future? _fetchFuture;
 
   final List<String> _timeRanges = [
     '1 Hour',
@@ -30,90 +28,18 @@ class _TokenDetailScreenState extends State<TokenDetailScreen> {
     '7 Days',
   ];
 
-  void _fetchData() async {
-    if (isLoading) return;
-    if (mounted) {
-      setState(() => isLoading = true);
-    }
-
-    try {
-      var newCryptoData = await getCryptocurrency(
-          cryptocurrency.symbol, _timeRanges[_selectedRangeIndex]);
-      print(newCryptoData.data);
-      if (mounted) {
-        setState(() {
-          cryptocurrency = newCryptoData.data[0];
-          isLoading = false;
-        });
-      }
-    } catch (e) {
-      print(e);
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-      }
-    }
-  }
-
-  void initSocket() {
-    socket =
-        IO.io('http://192.168.0.102:5000/cryptocurrency', <String, dynamic>{
-      'transports': ['websocket'],
-      'autoConnect': false,
-      'query': {'symbol': cryptocurrency.symbol},
-    });
-
-    socket.connect();
-    socket.on('connect', (_) {
-      print('Connected to socket');
-    });
-
-    socket.on('marketData', (marketData) {
-      if (mounted) {
-        final updatedCryptocurrency = CryptoRecord(
-          symbol: cryptocurrency.symbol,
-          name: cryptocurrency.name,
-          icon: cryptocurrency.icon,
-          decimal: cryptocurrency.decimal,
-          circulatingSupply: cryptocurrency.circulatingSupply,
-          totalSupply: cryptocurrency.totalSupply,
-          maxSupply: cryptocurrency.maxSupply,
-          price: marketData['price'].toDouble(),
-          marketCap: marketData['market_cap'].toDouble(),
-          priceChange: marketData['price_change'].toDouble(),
-          priceChangePercent: marketData['price_change_percent'].toDouble(),
-          openPrice: marketData['open_price'].toDouble(),
-          highPrice: marketData['high_price'].toDouble(),
-          lowPrice: marketData['low_price'].toDouble(),
-          volume: marketData['volume'].toDouble(),
-          isLastPriceUp: marketData['is_last_price_up'],
-        );
-
-        setState(() => cryptocurrency = updatedCryptocurrency);
-      }
-    });
-
-    socket.on('disconnect', (_) {
-      print('Disconnected from socket');
-    });
-  }
-
   @override
   void initState() {
     super.initState();
-    cryptocurrency = widget.cryptoData;
-    _fetchData();
-    initSocket();
-  }
-
-  Future<void> _refresh() async {
-    cryptocurrency = widget.cryptoData;
-    _fetchData();
+    _fetchFuture = Provider.of<CryptocurrencyProvider>(context, listen: false)
+        .fetchCryptocurrency(widget.cryptocurrency.symbol, windowSize);
   }
 
   @override
   Widget build(BuildContext context) {
+    bool isWatchlisted = Provider.of<CryptocurrencyProvider>(context)
+        .isCryptocurrencyWatchlisted(widget.cryptocurrency.id);
+
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
@@ -122,11 +48,24 @@ class _TokenDetailScreenState extends State<TokenDetailScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(
-              Icons.star,
-              color: primaryColor,
-            ),
-            onPressed: () => setState(() {}),
+            icon: isWatchlisted
+                ? const Icon(
+                    Icons.star_rounded,
+                    color: primaryColor,
+                  )
+                : const Icon(
+                    Icons.star_outline_rounded,
+                    color: whiteColor,
+                  ),
+            onPressed: () {
+              if (isWatchlisted) {
+                Provider.of<CryptocurrencyProvider>(context, listen: false)
+                    .removeWatchlist(widget.cryptocurrency.id);
+              } else {
+                Provider.of<CryptocurrencyProvider>(context, listen: false)
+                    .addWatchlist(widget.cryptocurrency.id);
+              }
+            },
           ),
         ],
         centerTitle: true,
@@ -134,84 +73,90 @@ class _TokenDetailScreenState extends State<TokenDetailScreen> {
         title: Row(
           children: [
             Text(
-              cryptocurrency.name,
+              widget.cryptocurrency.name!,
               style: Header3(),
             ),
             const SizedBox(
               width: 8,
             ),
             Text(
-              cryptocurrency.symbol,
+              widget.cryptocurrency.symbol,
               style: InputPlaceholder(),
             ),
           ],
         ),
       ),
-      body: RefreshIndicator(
-        onRefresh: _refresh,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ListView(
-            children: [
-              Column(
-                children: <Widget>[
-                  Container(
-                    width: MediaQuery.of(context).size.width,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.start,
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: FutureBuilder(
+          future: _fetchFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CircularProgressIndicator(
+                color: primaryColor,
+              );
+            } else if (snapshot.hasError) {
+              return Text('Error: ${snapshot.error}');
+            } else {
+              var cryptocurrency =
+                  Provider.of<CryptocurrencyProvider>(context, listen: false)
+                      .findCryptocurrency(widget.cryptocurrency.id);
+
+              PriceChangeData? priceChangeData =
+                  getPriceChangeData(cryptocurrency, windowSize);
+
+              return ListView(
+                children: [
+                  Column(
+                    children: <Widget>[
+                      Container(
+                        width: MediaQuery.of(context).size.width,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            CryptoPriceText(
-                              priceText: formatCurrency(
-                                  cryptocurrency.price, cryptocurrency.decimal),
-                              isLastPriceUp:
-                                  cryptocurrency.isLastPriceUp ?? false,
-                              isHeader: true,
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                CryptoPriceText(
+                                  priceText: formatCurrency(
+                                      cryptocurrency.price,
+                                      cryptocurrency.decimal!),
+                                  isLastPriceUp:
+                                      cryptocurrency.isLastPriceUp ?? false,
+                                  isHeader: true,
+                                ),
+                                Text(
+                                  ' ${priceChangeData!.priceChangePercent > 0 ? '+' : ''}${formatCurrency(priceChangeData.priceChange, cryptocurrency.decimal!)} (${priceChangeData.priceChangePercent.abs()}%) ',
+                                  style: priceChangeData.priceChangePercent >= 0
+                                      ? UpText()
+                                      : DownText(),
+                                ),
+                              ],
                             ),
-                            Text(
-                              ' ${cryptocurrency.priceChangePercent > 0 ? '+' : ''}${formatCurrency(cryptocurrency.priceChange, cryptocurrency.decimal)} (${cryptocurrency.priceChangePercent.abs()}%) ',
-                              style: cryptocurrency.priceChangePercent >= 0
-                                  ? UpText()
-                                  : DownText(),
+                            CircleAvatar(
+                              radius: 24,
+                              backgroundImage: NetworkImage(
+                                "https://s2.coinmarketcap.com/static/img/coins/64x64/${cryptocurrency.icon}.png",
+                              ),
+                              backgroundColor: whiteColor,
                             ),
                           ],
                         ),
-                        Container(
-                          padding: const EdgeInsets.all(8.0),
-                          alignment: Alignment.center,
-                          decoration: const BoxDecoration(
-                            color: imagePaddingBackgroundColor,
-                            shape: BoxShape.circle,
-                          ),
-                          child: CircleAvatar(
-                            radius: 20,
-                            backgroundImage: NetworkImage(
-                              "https://s2.coinmarketcap.com/static/img/coins/64x64/${cryptocurrency.icon}.png",
-                            ),
-                            backgroundColor: whiteColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 18,
-                  ),
-                  Container(
-                    alignment: Alignment.centerLeft,
-                    color: backgroundColor,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
+                      ),
+                      const SizedBox(
+                        height: 8,
+                      ),
+                      Container(
+                        alignment: Alignment.centerLeft,
+                        color: backgroundColor,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             ..._timeRanges.asMap().entries.map((entry) {
                               int idx = entry.key;
                               String timeRange = entry.value;
-                              bool isSelected = _selectedRangeIndex == idx;
+                              bool isSelected = windowSize == timeRange;
                               return Row(
                                 children: [
                                   TextButton(
@@ -236,186 +181,174 @@ class _TokenDetailScreenState extends State<TokenDetailScreen> {
                                     onPressed: () {
                                       if (mounted) {
                                         setState(() {
-                                          _selectedRangeIndex = idx;
+                                          windowSize = timeRange;
+                                          _fetchFuture = Provider.of<
+                                              CryptocurrencyProvider>(
+                                            context,
+                                            listen: false,
+                                          ).fetchCryptocurrency(
+                                            widget.cryptocurrency.symbol,
+                                            timeRange,
+                                          );
                                         });
-                                        socket.emit(
-                                          'changeWindowSize',
-                                          windowSizeFormatter(timeRange),
-                                        );
-                                        _fetchData();
                                       }
                                     },
                                   ),
-                                  if (idx != 2) const SizedBox(width: 4),
+                                  if (idx != 2) const SizedBox(width: 16),
                                 ],
                               );
                             }).toList(),
                           ],
                         ),
-                        Row(
-                          children: [
-                            TextButton(
-                              style: TextButton.styleFrom(
-                                side: const BorderSide(
-                                  color: imagePaddingBackgroundColor,
-                                ),
-                                foregroundColor:
-                                    _selectedChartType == 'candlestick'
-                                        ? whiteColor
-                                        : whiteColorOpacity55,
-                                backgroundColor:
-                                    _selectedChartType == 'candlestick'
-                                        ? primaryColor
-                                        : Colors.transparent,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4.0),
+                      ),
+                      const SizedBox(
+                        height: 290,
+                      ),
+                      Column(
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: MarketDataTile(
+                                  title: 'Volume ($windowSize)',
+                                  value: formatMoney(priceChangeData.volume!),
                                 ),
                               ),
-                              child: Icon(
-                                Icons.candlestick_chart_sharp,
-                                color: _selectedChartType == 'candlestick'
-                                    ? whiteColor
-                                    : whiteColorOpacity55,
-                              ),
-                              onPressed: () {
-                                if (mounted) {
-                                  setState(() {
-                                    _selectedChartType = 'candlestick';
-                                  });
-                                }
-                              },
-                            ),
-                            const SizedBox(width: 4),
-                            TextButton(
-                              style: TextButton.styleFrom(
-                                side: const BorderSide(
-                                  color: imagePaddingBackgroundColor,
-                                ),
-                                foregroundColor:
-                                    _selectedChartType == 'linechart'
-                                        ? whiteColor
-                                        : whiteColorOpacity55,
-                                backgroundColor:
-                                    _selectedChartType == 'linechart'
-                                        ? primaryColor
-                                        : Colors.transparent,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4.0),
+                              Expanded(
+                                child: MarketDataTile(
+                                  title: 'Market Cap',
+                                  value: formatMoney(cryptocurrency.marketCap),
                                 ),
                               ),
-                              child: Icon(
-                                Icons.stacked_line_chart_sharp,
-                                color: _selectedChartType == 'linechart'
-                                    ? whiteColor
-                                    : whiteColorOpacity55,
+                              Expanded(
+                                child: cryptocurrency.maxSupply == -1
+                                    ? const MarketDataTile(
+                                        title: 'Fully Diluted M.Cap',
+                                        value: "Inifitiy",
+                                      )
+                                    : cryptocurrency.maxSupply == 0
+                                        ? const MarketDataTile(
+                                            title: 'Fully Diluted M.Cap',
+                                            value: "No Data",
+                                          )
+                                        : MarketDataTile(
+                                            title: 'Fully Diluted M.Cap',
+                                            value: formatMoney(
+                                                cryptocurrency.maxSupply! *
+                                                    cryptocurrency.price),
+                                          ),
                               ),
-                              onPressed: () {
-                                if (mounted) {
-                                  setState(() {
-                                    _selectedChartType = 'linechart';
-                                  });
-                                }
-                              },
-                            ),
-                          ],
+                            ],
+                          ),
+                          const SizedBox(
+                            height: 8,
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: MarketDataTile(
+                                  title: 'Circulating Supply',
+                                  value: formatMoney(
+                                    cryptocurrency.circulatingSupply!,
+                                    false,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: MarketDataTile(
+                                  title: 'Total Supply',
+                                  value: formatMoney(
+                                    cryptocurrency.totalSupply!,
+                                    false,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: cryptocurrency.maxSupply == -1
+                                    ? const MarketDataTile(
+                                        title: 'Max Supply',
+                                        value: "Inifitiy",
+                                      )
+                                    : cryptocurrency.maxSupply == 0
+                                        ? const MarketDataTile(
+                                            title: 'Max Supply',
+                                            value: "No Data",
+                                          )
+                                        : MarketDataTile(
+                                            title: 'Max Supply',
+                                            value: formatMoney(
+                                                cryptocurrency.maxSupply!),
+                                          ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(
+                            height: 8,
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: MarketDataTile(
+                                  title: 'Open ($windowSize)',
+                                  value: formatCurrency(
+                                    priceChangeData.openPrice!,
+                                    cryptocurrency.decimal!,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: MarketDataTile(
+                                  title: 'Low ($windowSize)',
+                                  value: formatCurrency(
+                                    priceChangeData.lowPrice!,
+                                    cryptocurrency.decimal!,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: MarketDataTile(
+                                  title: 'High ($windowSize)',
+                                  value: formatCurrency(
+                                    priceChangeData.highPrice!,
+                                    cryptocurrency.decimal!,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 24,
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          visualDensity: const VisualDensity(),
+                          backgroundColor: primaryColor,
+                          elevation: 1,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(7),
+                          ),
+                          minimumSize: const Size(double.infinity, 50),
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 290,
-                  ),
-                  Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: MarketDataTile(
-                              title:
-                                  'Volume (${_timeRanges[_selectedRangeIndex]})',
-                              value: formatMoney(cryptocurrency.marketCap),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AddTransactionScreen(
+                                cryptocurrency: cryptocurrency,
+                              ),
                             ),
-                          ),
-                          Expanded(
-                            child: MarketDataTile(
-                              title: 'Market Cap',
-                              value: formatMoney(cryptocurrency.marketCap),
-                            ),
-                          ),
-                          Expanded(
-                            child: MarketDataTile(
-                              title: 'Fully Diluted M.Cap',
-                              value: formatMoney(cryptocurrency.maxSupply *
-                                  cryptocurrency.price),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(
-                        height: 8,
-                      ),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: MarketDataTile(
-                              title: 'Circulating Supply',
-                              value: formatMoney(
-                                  cryptocurrency.circulatingSupply, false),
-                            ),
-                          ),
-                          Expanded(
-                            child: MarketDataTile(
-                              title: 'Total Supply',
-                              value: formatMoney(
-                                  cryptocurrency.totalSupply, false),
-                            ),
-                          ),
-                          Expanded(
-                            child: MarketDataTile(
-                              title: 'Max Supply',
-                              value:
-                                  formatMoney(cryptocurrency.maxSupply, false),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(
-                        height: 8,
-                      ),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: MarketDataTile(
-                              title:
-                                  'Open (${_timeRanges[_selectedRangeIndex]})',
-                              value: formatCurrency(cryptocurrency.openPrice,
-                                  cryptocurrency.decimal),
-                            ),
-                          ),
-                          Expanded(
-                            child: MarketDataTile(
-                              title:
-                                  'Low (${_timeRanges[_selectedRangeIndex]})',
-                              value: formatCurrency(cryptocurrency.lowPrice,
-                                  cryptocurrency.decimal),
-                            ),
-                          ),
-                          Expanded(
-                            child: MarketDataTile(
-                              title:
-                                  'High (${_timeRanges[_selectedRangeIndex]})',
-                              value: formatCurrency(cryptocurrency.highPrice,
-                                  cryptocurrency.decimal),
-                            ),
-                          ),
-                        ],
+                          );
+                        },
+                        child: Text("Add Transaction", style: Header2()),
                       ),
                     ],
                   ),
                 ],
-              ),
-            ],
-          ),
+              );
+            }
+          },
         ),
       ),
     );

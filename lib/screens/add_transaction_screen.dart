@@ -1,17 +1,76 @@
-import 'package:flutter/material.dart';
-import 'package:marketsnapp/types/cryptocurrency.dart';
+import 'dart:convert';
 
-class addTransactionPage extends StatefulWidget {
-  final CryptoRecord cryptoData;
-  const addTransactionPage({Key? key, required this.cryptoData})
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:marketsnapp/config.dart';
+import 'package:marketsnapp/providers/portfolio_provider.dart';
+import 'package:marketsnapp/screens/portfolio_screen.dart';
+import 'package:marketsnapp/types/cryptocurrency.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class AddTransactionScreen extends StatefulWidget {
+  final CryptocurrencyRecord cryptocurrency;
+  const AddTransactionScreen({Key? key, required this.cryptocurrency})
       : super(key: key);
 
   @override
-  State<addTransactionPage> createState() => _addTransactionPageState();
+  State<AddTransactionScreen> createState() => _AddTransactionScreenState();
 }
 
-class _addTransactionPageState extends State<addTransactionPage> {
-  bool deduct = false;
+class _AddTransactionScreenState extends State<AddTransactionScreen> {
+  String errormessage = "";
+  double price = 0.0;
+  double amount = 0.0;
+  bool transaction_type = true;
+  DateTime transaction_date = DateTime.now();
+  String transaction_note = '';
+
+  Future<bool> addTransactionRequest() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString("token");
+
+    const endpoint = "transaction/add";
+    const String url = '$serverURL$endpoint';
+
+    final Map<String, dynamic> body = {
+      "cryptocurrency_id": widget.cryptocurrency.id,
+      "transaction_type": transaction_type,
+      "price": price,
+      "amount": amount,
+      "transaction_date": transaction_date.toString(),
+      "transaction_note": transaction_note
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(body),
+      );
+
+      if (response.statusCode == 201) {
+        setState(() {
+          errormessage = "Transaction added successfully";
+        });
+        return true;
+      } else {
+        setState(() {
+          errormessage = "Failed to add transaction";
+        });
+        return false;
+      }
+    } catch (e) {
+      setState(() {
+        errormessage = "Failed to add transaction";
+      });
+      print(e);
+      return false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,141 +78,333 @@ class _addTransactionPageState extends State<addTransactionPage> {
       initialIndex: 0,
       length: 2,
       child: Scaffold(
-        backgroundColor: const Color(0xff0e0f18),
+        backgroundColor: backgroundColor,
         appBar: AppBar(
-          iconTheme: IconThemeData(
-            color: Colors.white70, // <-- SEE HERE
-          ),
+          iconTheme: const IconThemeData(color: whiteColor),
           centerTitle: true,
-          backgroundColor: const Color(0xff0e0f18),
+          backgroundColor: backgroundColor,
           title: Text(
-            '${widget.cryptoData.name}',
-            style: TextStyle(color: Colors.white),
+            widget.cryptocurrency.symbol,
+            style: Header1(),
           ),
-          bottom: const TabBar(
-            indicatorColor: const Color.fromRGBO(50, 204, 134, 1.0),
+          bottom: TabBar(
+            indicatorColor: primaryColor,
             indicatorSize: TabBarIndicatorSize.tab,
-            labelStyle: TextStyle(fontSize: 18),
-            labelColor: Colors.white, //<-- selected text color
-            unselectedLabelColor: Colors.white70, //<-- Unselected text color
+            labelStyle: Header2(),
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
             tabs: <Widget>[
-              Tab(
-                text: 'Buy',
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    transaction_type = true;
+                  });
+                },
+                child: const Tab(
+                  text: 'Buy',
+                ),
               ),
-              Tab(
-                text: 'Sell',
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    transaction_type = false;
+                  });
+                },
+                child: const Tab(
+                  text: 'Sell',
+                ),
               ),
             ],
           ),
         ),
         body: TabBarView(
           children: <Widget>[
-            ListView(
-              children: <Widget>[
-                ListTile(
-                  onTap: () {
-                    print('Price is clicked');
-                  },
-                  tileColor: const Color(0xff0e0f18),
-                  subtitle: const Text(
-                    'Enter the price when you bought',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white,
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: ListView(
+                children: <Widget>[
+                  const SizedBox(height: 16),
+                  Text("Price", style: Header3()),
+                  TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Enter the price when you bought',
+                      hintStyle: InputPlaceholder(),
+                      border: UnderlineInputBorder(
+                        borderSide: BorderSide(color: whiteColorOpacity55),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white),
+                      ),
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: whiteColorOpacity55),
+                      ),
+                      fillColor: Colors.transparent,
                     ),
-                  ),
-                  title: const Text(
-                    'Price',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white70,
+                    style: Body(),
+                    cursorColor: primaryColor,
+                    cursorHeight: 20,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
                     ),
-                  ),
-                  trailing: const Icon(
-                    Icons.chevron_right,
-                    color: Colors.white,
-                  ),
-                ),
-                ListTile(
-                  onTap: () {
-                    print('Amount bought is clicked');
-                  },
-                  tileColor: const Color(0xff0e0f18),
-                  subtitle: const Text(
-                    'Enter the amount you bought',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white,
-                    ),
-                  ),
-                  title: const Text(
-                    'Amount bought',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white70,
-                    ),
-                  ),
-                  trailing: const Icon(
-                    Icons.chevron_right,
-                    color: Colors.white,
-                  ),
-                ),
-                ListTile(
-                  onTap: () {
-                    print('Amount bought is clicked');
-                  },
-                  tileColor: const Color(0xff0e0f18),
-                  title: const Text(
-                    'Deduct from ETH holdings?',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white,
-                    ),
-                  ),
-                  trailing: Switch(
-                    inactiveTrackColor: const Color(0xff0e0f18),
-                    activeColor: const Color.fromRGBO(50, 204, 134, 1.0),
-                    value: deduct,
                     onChanged: (value) {
                       setState(() {
-                        deduct = value;
-                        print('Deduct is ${deduct}');
+                        price = double.tryParse(value) ?? 0.0;
+                        ;
                       });
                     },
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  Text("Amount", style: Header3()),
+                  TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Enter the amount you bought',
+                      hintStyle: InputPlaceholder(),
+                      border: UnderlineInputBorder(
+                        borderSide: BorderSide(color: whiteColorOpacity55),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white),
+                      ),
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: whiteColorOpacity55),
+                      ),
+                      fillColor: Colors.transparent,
+                    ),
+                    style: Body(),
+                    cursorColor: primaryColor,
+                    cursorHeight: 20,
+                    keyboardType: TextInputType.emailAddress,
+                    onChanged: (value) {
+                      setState(() {
+                        amount = double.tryParse(value) ?? 0.0;
+                      });
+                    },
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    onTap: () async {
+                      final DateTime? pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: transaction_date,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2024),
+                      );
+                      if (pickedDate != null &&
+                          pickedDate != transaction_date) {
+                        setState(() {
+                          transaction_date = pickedDate;
+                        });
+                      }
+                    },
+                    tileColor: const Color(0xff0e0f18),
+                    subtitle: Text(
+                      'Select the transaction date',
+                      style: InputPlaceholder(),
+                    ),
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Transaction Date',
+                          style: Header3(),
+                        ),
+                        const SizedBox(
+                          height: 8,
+                        )
+                      ],
+                    ),
+                    trailing: const Icon(
+                      Icons.calendar_today,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text("Transaction Note", style: Header3()),
+                  TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Enter the transaction note',
+                      hintStyle: InputPlaceholder(),
+                      border: UnderlineInputBorder(
+                        borderSide: BorderSide(color: whiteColorOpacity55),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white),
+                      ),
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: whiteColorOpacity55),
+                      ),
+                      fillColor: Colors.transparent,
+                    ),
+                    style: Body(),
+                    cursorColor: primaryColor,
+                    cursorHeight: 20,
+                    keyboardType: TextInputType.emailAddress,
+                    onChanged: (value) {
+                      setState(() {
+                        transaction_note = value;
+                      });
+                    },
+                  ),
+                  if (errormessage != "") Text(errormessage, style: DownText())
+                ],
+              ),
             ),
-            Center(
-              child: Text("It's sunny here"),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: ListView(
+                children: <Widget>[
+                  const SizedBox(height: 16),
+                  Text("Price", style: Header3()),
+                  TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Enter the price when you sold',
+                      hintStyle: InputPlaceholder(),
+                      border: UnderlineInputBorder(
+                        borderSide: BorderSide(color: whiteColorOpacity55),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white),
+                      ),
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: whiteColorOpacity55),
+                      ),
+                      fillColor: Colors.transparent,
+                    ),
+                    style: Body(),
+                    cursorColor: primaryColor,
+                    cursorHeight: 20,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        price = double.tryParse(value) ?? 0.0;
+                        ;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Text("Amount", style: Header3()),
+                  TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Enter the amount you sold',
+                      hintStyle: InputPlaceholder(),
+                      border: UnderlineInputBorder(
+                        borderSide: BorderSide(color: whiteColorOpacity55),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white),
+                      ),
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: whiteColorOpacity55),
+                      ),
+                      fillColor: Colors.transparent,
+                    ),
+                    style: Body(),
+                    cursorColor: primaryColor,
+                    cursorHeight: 20,
+                    keyboardType: TextInputType.emailAddress,
+                    onChanged: (value) {
+                      setState(() {
+                        amount = double.tryParse(value) ?? 0.0;
+                      });
+                    },
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    onTap: () async {
+                      final DateTime? pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: transaction_date,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2024),
+                      );
+                      if (pickedDate != null &&
+                          pickedDate != transaction_date) {
+                        setState(() {
+                          transaction_date = pickedDate;
+                        });
+                      }
+                    },
+                    tileColor: const Color(0xff0e0f18),
+                    subtitle: Text(
+                      'Select the transaction date',
+                      style: InputPlaceholder(),
+                    ),
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Transaction Date',
+                          style: Header3(),
+                        ),
+                        const SizedBox(
+                          height: 8,
+                        )
+                      ],
+                    ),
+                    trailing: const Icon(
+                      Icons.calendar_today,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text("Transaction Note", style: Header3()),
+                  TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Enter the transaction note',
+                      hintStyle: InputPlaceholder(),
+                      border: UnderlineInputBorder(
+                        borderSide: BorderSide(color: whiteColorOpacity55),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white),
+                      ),
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: whiteColorOpacity55),
+                      ),
+                      fillColor: Colors.transparent,
+                    ),
+                    style: Body(),
+                    cursorColor: primaryColor,
+                    cursorHeight: 20,
+                    keyboardType: TextInputType.emailAddress,
+                    onChanged: (value) {
+                      setState(() {
+                        transaction_note = value;
+                      });
+                    },
+                  ),
+                  if (errormessage != "") Text(errormessage, style: DownText())
+                ],
+              ),
             ),
           ],
         ),
-        bottomNavigationBar: Material(
-          color: const Color.fromRGBO(50, 204, 134, 1.0),
-          child: InkWell(
-            onTap: () {
-              print('called on tap');
-            },
-            child: const SizedBox(
-              height: kToolbarHeight,
-              width: double.infinity,
-              child: Center(
-                child: Text(
-                  'Add transaction',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+        bottomNavigationBar: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            visualDensity: const VisualDensity(),
+            backgroundColor: primaryColor,
+            elevation: 1,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(0),
             ),
+            minimumSize: const Size(double.infinity, 50),
           ),
+          onPressed: () async {
+            var isTransactionGenerated = await addTransactionRequest();
+            if (isTransactionGenerated) {
+              await Provider.of<PortfolioProvider>(context, listen: false)
+                  .getPortfolio()
+                  .then(
+                    (value) => Navigator.pushReplacementNamed(
+                        context, PortfolioScreen.id),
+                  );
+            }
+          },
+          child: Text("Add Transaction", style: Header2()),
         ),
       ),
     );

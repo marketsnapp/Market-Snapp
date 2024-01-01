@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:marketsnapp/config.dart';
-import 'package:marketsnapp/api/auth.dart';
-import 'package:marketsnapp/screens/landing_screen.dart';
+import 'package:marketsnapp/providers/user_provider.dart';
+import 'package:marketsnapp/screens/home_screen.dart';
 import 'package:marketsnapp/screens/signup_screen.dart';
+import 'package:provider/provider.dart';
 
 class LoginSection extends StatefulWidget {
   static const String id = 'login';
@@ -21,13 +22,22 @@ class _LoginSectionState extends State<LoginSection> {
     setState(() {
       errorMessage = null;
     });
-    String? result = await login(email, password);
-    if (result != null) {
-      setState(() {
-        errorMessage = result;
-      });
-    } else {
-      Navigator.pushReplacementNamed(context, LandingScreen.id);
+
+    String resultMessage =
+        await Provider.of<UserProvider>(context, listen: false)
+            .login(email, password);
+
+    if (mounted) {
+      if (Provider.of<UserProvider>(context, listen: false).user != null) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          (Route<dynamic> route) => false,
+        );
+      } else {
+        setState(() {
+          errorMessage = resultMessage;
+        });
+      }
     }
   }
 

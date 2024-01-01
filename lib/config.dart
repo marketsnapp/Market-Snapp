@@ -42,11 +42,11 @@ TextStyle BodyLink() {
 }
 
 TextStyle UpText() {
-  return spaceGroteskStyle(12, FontWeight.w400, greenColor);
+  return spaceGroteskStyle(14, FontWeight.w400, greenColor);
 }
 
 TextStyle DownText() {
-  return spaceGroteskStyle(12, FontWeight.w400, redColor);
+  return spaceGroteskStyle(14, FontWeight.w400, redColor);
 }
 
 TextStyle DetailPageCardHeader() {

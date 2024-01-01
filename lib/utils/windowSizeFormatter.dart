@@ -2,7 +2,7 @@ String windowSizeFormatter(windowSizeLabel) {
   var windowSize = "1d";
   switch (windowSizeLabel) {
     case '1 Hour':
-      windowSize = '1h.';
+      windowSize = '1h';
       break;
     case '24 Hours':
       windowSize = '1d';
