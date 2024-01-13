@@ -20,11 +20,6 @@ class PortfolioScreen extends StatefulWidget {
 }
 
 class _PortfolioScreenState extends State<PortfolioScreen> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
   Widget tableHeader() {
     return Container(
       color: backgroundColor,
@@ -170,7 +165,7 @@ Widget cryptocurrencyCard(
                   style: Header3(),
                 ),
                 Text(
-                  "${formatMoney(holding.profit)} (${formatMoney(holding.profit > 0 ? ((cryptocurrency.price / holding.averagePurchasePrice) - 1) * 100 : (2 - (cryptocurrency.price / holding.averagePurchasePrice)) * 100, false)})%",
+                  "${formatMoney(holding.profit, false)} (${formatMoney(holding.profit > 0 ? ((cryptocurrency.price / holding.averagePurchasePrice) - 1) * 100 : (1 - (cryptocurrency.price / holding.averagePurchasePrice)) * 100, false)}%)",
                   style: holding.profit > 0 ? UpText() : DownText(),
                 ),
               ],
@@ -188,7 +183,7 @@ Widget cryptocurrencyCard(
                   style: Header3(),
                 ),
                 Text(
-                  "${formatCurrency(holding.amount, cryptocurrency.decimal ?? 2)} ${cryptocurrency.symbol}",
+                  "${formatMoney(holding.amount, false)} ${cryptocurrency.symbol}",
                   style: InputPlaceholder(),
                 ),
               ],

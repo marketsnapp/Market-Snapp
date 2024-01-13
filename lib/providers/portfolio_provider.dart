@@ -34,7 +34,7 @@ class PortfolioProvider with ChangeNotifier {
     if (this.totalProfit > 0) {
       return ((this.totalPortfolioValue / totalSpend) - 1) * 100;
     } else {
-      return (2 - (this.totalPortfolioValue / totalSpend)) * 100;
+      return (1 - (this.totalPortfolioValue / totalSpend)) * 100;
     }
   }
 
@@ -55,7 +55,6 @@ class PortfolioProvider with ChangeNotifier {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print(response.body);
         _portfolio = Portfolio.fromJson(data['data']);
         notifyListeners();
       } else {

@@ -1,6 +1,11 @@
+import 'dart:math';
+
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:marketsnapp/providers/cryptocurrency_provider.dart';
 import 'package:marketsnapp/screens/add_transaction_screen.dart';
+import 'package:marketsnapp/types/historicaldata.dart';
 import 'package:marketsnapp/utils/getPriceChangeData.dart';
 import 'package:provider/provider.dart';
 import 'package:marketsnapp/config.dart';
@@ -28,11 +33,25 @@ class _TokenDetailScreenState extends State<TokenDetailScreen> {
     '7 Days',
   ];
 
+  String getXAxisLabel(DateTime date, String windowSize) {
+    if (windowSize == '1 Hour') {
+      return DateFormat.Hm().format(date); // Hours and minutes
+    } else if (windowSize == '24 Hours' || windowSize == '7 Days') {
+      return DateFormat.MMMd().format(date); // Month day
+    } else {
+      return ''; // Default case or error
+    }
+  }
+
+  late Future<HistoricalData> _fetchHistoricalDataFuture;
   @override
   void initState() {
     super.initState();
     _fetchFuture = Provider.of<CryptocurrencyProvider>(context, listen: false)
         .fetchCryptocurrency(widget.cryptocurrency.symbol, windowSize);
+
+    _fetchHistoricalDataFuture =
+        fetchHistoricalData(widget.cryptocurrency.symbol, windowSize);
   }
 
   @override
@@ -190,6 +209,11 @@ class _TokenDetailScreenState extends State<TokenDetailScreen> {
                                             widget.cryptocurrency.symbol,
                                             timeRange,
                                           );
+
+                                          _fetchHistoricalDataFuture =
+                                              fetchHistoricalData(
+                                                  widget.cryptocurrency.symbol,
+                                                  windowSize);
                                         });
                                       }
                                     },
@@ -202,7 +226,177 @@ class _TokenDetailScreenState extends State<TokenDetailScreen> {
                         ),
                       ),
                       const SizedBox(
-                        height: 290,
+                        height: 16,
+                      ),
+                      FutureBuilder<HistoricalData>(
+                        future: _fetchHistoricalDataFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          } else if (snapshot.hasError) {
+                            return Text('Error: ${snapshot.error}');
+                          } else if (!snapshot.hasData ||
+                              snapshot.data!.priceData.isEmpty) {
+                            return const Text('No data available');
+                          }
+
+                          var priceData = snapshot.data!.priceData;
+                          double minY =
+                              priceData.map((e) => e.closePrice).reduce(min);
+                          double maxY =
+                              priceData.map((e) => e.closePrice).reduce(max);
+
+                          if (windowSize == "1 Hour") {
+                            minY *= 0.995;
+                            maxY *= 1.005;
+                          } else if (windowSize == "24 Hours") {
+                            minY *= 0.98;
+                            maxY *= 1.02;
+                          } else {
+                            minY *= 0.96;
+                            maxY *= 1.04;
+                          }
+
+                          List<FlSpot> spots = priceData
+                              .asMap()
+                              .entries
+                              .map((e) =>
+                                  FlSpot(e.key.toDouble(), e.value.closePrice))
+                              .toList();
+
+                          double minX = 0;
+                          double maxX = spots.length.toDouble() - 1;
+
+                          double verticalInterval = spots.length / 12;
+                          double horizontalInterval = (maxY - minY) / 4;
+
+                          int estimatedTextLength = maxY
+                              .toStringAsFixed(
+                                  widget.cryptocurrency.decimal ?? 2)
+                              .length;
+                          double reservedSize = estimatedTextLength * 8;
+
+                          return SizedBox(
+                            height: 250,
+                            child: LineChart(
+                              LineChartData(
+                                minX: minX,
+                                maxX: maxX,
+                                minY: minY,
+                                maxY: maxY,
+                                gridData: FlGridData(
+                                  show: true,
+                                  drawVerticalLine: true,
+                                  verticalInterval: verticalInterval,
+                                  horizontalInterval: horizontalInterval,
+                                  getDrawingHorizontalLine: (value) {
+                                    return FlLine(
+                                      color: whiteColor.withOpacity(0.1),
+                                      strokeWidth: 1,
+                                    );
+                                  },
+                                  getDrawingVerticalLine: (value) {
+                                    return FlLine(
+                                      color: whiteColor.withOpacity(0.1),
+                                      strokeWidth: 1,
+                                    );
+                                  },
+                                ),
+                                titlesData: FlTitlesData(
+                                  leftTitles: const AxisTitles(
+                                    sideTitles: SideTitles(showTitles: false),
+                                  ),
+                                  rightTitles: AxisTitles(
+                                    sideTitles: SideTitles(
+                                      showTitles: true,
+                                      getTitlesWidget:
+                                          (double value, TitleMeta meta) {
+                                        if (value == minY || value == maxY) {
+                                          String text = value.toStringAsFixed(
+                                              widget.cryptocurrency.decimal ??
+                                                  2);
+
+                                          return Text(
+                                            text,
+                                            style: spaceGroteskStyle(
+                                              12,
+                                              FontWeight.normal,
+                                              whiteColor,
+                                            ),
+                                            textAlign: TextAlign.right,
+                                          );
+                                        } else {
+                                          return const Text('');
+                                        }
+                                      },
+                                      reservedSize: reservedSize,
+                                    ),
+                                  ),
+                                  topTitles: const AxisTitles(
+                                    sideTitles: SideTitles(showTitles: false),
+                                  ),
+                                  bottomTitles: AxisTitles(
+                                    sideTitles: SideTitles(
+                                      showTitles: true,
+                                      reservedSize: 30,
+                                      interval: 1,
+                                      getTitlesWidget:
+                                          (double value, TitleMeta meta) {
+                                        if (value.toInt() >= 0 &&
+                                            value.toInt() < priceData.length) {
+                                          final DateTime date =
+                                              priceData[value.toInt()].openTime;
+                                          var text = '';
+                                          if (value.toInt() % (12) == 0 ||
+                                              value.toInt() ==
+                                                  priceData.length - 1) {
+                                            text =
+                                                getXAxisLabel(date, windowSize);
+                                          }
+                                          return SideTitleWidget(
+                                            axisSide: meta.axisSide,
+                                            space: 8.0,
+                                            child: Text(
+                                              text,
+                                              style: spaceGroteskStyle(
+                                                12,
+                                                FontWeight.normal,
+                                                whiteColor,
+                                              ),
+                                            ),
+                                          );
+                                        } else {
+                                          return const Text('');
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                borderData: FlBorderData(show: true),
+                                lineBarsData: [
+                                  LineChartBarData(
+                                    spots: spots,
+                                    isCurved: true,
+                                    color: primaryColor,
+                                    barWidth: 1,
+                                    isStrokeCapRound: true,
+                                    dotData: FlDotData(show: false),
+                                    belowBarData: BarAreaData(
+                                      show: true,
+                                      color: primaryColor.withOpacity(0.1),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(
+                        height: 16,
                       ),
                       Column(
                         children: [
@@ -277,7 +471,8 @@ class _TokenDetailScreenState extends State<TokenDetailScreen> {
                                         : MarketDataTile(
                                             title: 'Max Supply',
                                             value: formatMoney(
-                                                cryptocurrency.maxSupply!),
+                                                cryptocurrency.maxSupply!,
+                                                false),
                                           ),
                               ),
                             ],
@@ -332,7 +527,7 @@ class _TokenDetailScreenState extends State<TokenDetailScreen> {
                           minimumSize: const Size(double.infinity, 50),
                         ),
                         onPressed: () {
-                          Navigator.push(
+                          Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
                               builder: (context) => AddTransactionScreen(

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:marketsnapp/config.dart';
 import 'package:marketsnapp/providers/portfolio_provider.dart';
+import 'package:marketsnapp/screens/home_screen.dart';
 import 'package:marketsnapp/screens/portfolio_screen.dart';
 import 'package:marketsnapp/types/cryptocurrency.dart';
 import 'package:provider/provider.dart';
@@ -186,8 +187,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       final DateTime? pickedDate = await showDatePicker(
                         context: context,
                         initialDate: transaction_date,
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2024),
+                        firstDate: DateTime(2010),
+                        lastDate: DateTime.now(),
                       );
                       if (pickedDate != null &&
                           pickedDate != transaction_date) {
@@ -317,8 +318,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       final DateTime? pickedDate = await showDatePicker(
                         context: context,
                         initialDate: transaction_date,
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2024),
+                        firstDate: DateTime(2010),
+                        lastDate: DateTime.now(),
                       );
                       if (pickedDate != null &&
                           pickedDate != transaction_date) {
@@ -399,8 +400,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               await Provider.of<PortfolioProvider>(context, listen: false)
                   .getPortfolio()
                   .then(
-                    (value) => Navigator.pushReplacementNamed(
-                        context, PortfolioScreen.id),
+                    (value) => Navigator.pushNamedAndRemoveUntil(
+                        context, HomeScreen.id, (route) => false),
                   );
             }
           },

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:marketsnapp/providers/cryptocurrency_provider.dart';
+import 'package:marketsnapp/providers/portfolio_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:marketsnapp/config.dart';
 import 'package:marketsnapp/providers/user_provider.dart';
@@ -29,6 +31,20 @@ class _SignUpSectionState extends State<SignUpSection> {
 
     if (mounted) {
       if (Provider.of<UserProvider>(context, listen: false).user != null) {
+        CryptocurrencyProvider cryptocurrencyProvider =
+            Provider.of<CryptocurrencyProvider>(context, listen: false);
+
+        PortfolioProvider portfolioProvider =
+            Provider.of<PortfolioProvider>(context, listen: false);
+
+        await cryptocurrencyProvider.fetchCryptocurrencies("24 Hours");
+
+        await portfolioProvider.getPortfolio();
+
+        portfolioProvider.listenToCryptocurrencyUpdates(cryptocurrencyProvider);
+
+        portfolioProvider.sortHoldingsByCurrentValue(cryptocurrencyProvider);
+
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => HomeScreen()),
           (Route<dynamic> route) => false,
