@@ -34,14 +34,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     const endpoint = "transaction/add";
     const String url = '$serverURL$endpoint';
 
-    final Map<String, dynamic> body = {
-      "cryptocurrency_id": widget.cryptocurrency.id,
-      "transaction_type": transaction_type,
-      "price": price,
-      "amount": amount,
-      "transaction_date": transaction_date.toString(),
-      "transaction_note": transaction_note
-    };
+
+    
 
     try {
       final response = await http.post(
