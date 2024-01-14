@@ -42,7 +42,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       "transaction_date": transaction_date.toString(),
       "transaction_note": transaction_note
     };
-    
+
     try {
       final response = await http.post(
         Uri.parse(url),
