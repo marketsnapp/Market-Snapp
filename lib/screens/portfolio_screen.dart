@@ -64,12 +64,14 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                 formatCurrency(portfolioProvider.totalPortfolioValue, 2),
                 style: Header1(),
               ),
+              
               Text(
                 "${formatCurrency(portfolioProvider.totalProfit, 2)} (${formatMoney(portfolioProvider.totalChange, false)}%)",
                 style: portfolioProvider.totalProfit > 0
                     ? spaceGroteskStyle(20, FontWeight.w400, greenColor)
                     : spaceGroteskStyle(20, FontWeight.w400, redColor),
               ),
+              
               Expanded(
                 flex: 1,
                 child: hasData
@@ -105,7 +107,9 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                       return const CircularProgressIndicator(
                         color: primaryColor,
                       );
-                    } else {
+                    } 
+                    else 
+                    {
                       return cryptocurrencyCard(
                           holding, cryptocurrency, priceChangeData);
                     }
@@ -142,7 +146,8 @@ Widget cryptocurrencyCard(
   Holding holding,
   CryptocurrencyRecord cryptocurrency,
   PriceChangeData priceChangeData,
-) {
+) 
+{
   return InkWell(
     child: Container(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -164,6 +169,7 @@ Widget cryptocurrencyCard(
                   cryptocurrency.symbol,
                   style: Header3(),
                 ),
+                
                 Text(
                   "${formatMoney(holding.profit, false)} (${formatMoney(holding.profit > 0 ? ((cryptocurrency.price / holding.averagePurchasePrice) - 1) * 100 : (1 - (cryptocurrency.price / holding.averagePurchasePrice)) * 100, false)}%)",
                   style: holding.profit > 0 ? UpText() : DownText(),
@@ -182,6 +188,7 @@ Widget cryptocurrencyCard(
                   formatCurrency(holding.currentValue, 2),
                   style: Header3(),
                 ),
+                
                 Text(
                   "${formatMoney(holding.amount, false)} ${cryptocurrency.symbol}",
                   style: InputPlaceholder(),
